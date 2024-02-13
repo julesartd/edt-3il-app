@@ -13,6 +13,8 @@ class Calendar extends StatefulWidget {
 
 class _CalendarState extends State<Calendar> {
   List<Map<String, dynamic>> schedule = [];
+  final PageController _pageController = PageController(initialPage: 0);
+  int currentPage = 0;
 
   @override
   void initState() {
@@ -22,7 +24,6 @@ class _CalendarState extends State<Calendar> {
 
   Future<void> loadSchedule() async {
     try {
-      // Utilisez les données fictives en mode de développement local
       final scheduleData = await ApiService.getCalendar(widget.className);
 
       setState(() {
@@ -45,116 +46,106 @@ class _CalendarState extends State<Calendar> {
       body: Center(
         child: schedule.isEmpty
             ? const CircularProgressIndicator()
-            : buildScheduleTable(),
+            : buildSchedulePageView(),
       ),
     );
   }
 
-  Widget buildScheduleTable() {
-    return ListView.builder(
+  Widget buildSchedulePageView() {
+    return PageView.builder(
+      controller: _pageController,
       itemCount: schedule.length,
-      itemBuilder: (BuildContext context, int index) {
-        var daySchedule = schedule[index];
-        DateTime date = DateFormat('dd/MM/yyyy').parse(daySchedule['date']);
-        String formattedDate = DateFormat('dd/MM/yyyy').format(date);
-
-        return Column(
-          children: [
-            Text("${_getDayOfWeek(date)} - $formattedDate",
-                style: const TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                )),
-            Padding(padding: const EdgeInsets.all(16.0)),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: daySchedule['cours'].length,
-              itemBuilder: (BuildContext context, int index) {
-                var course = daySchedule['cours'][index];
-
-                if (course['creneau'] == '3') {
-                  return Container(
-                    margin: const EdgeInsets.all(8.0),
-                    padding: const EdgeInsets.all(12.0),
-                    decoration: BoxDecoration(
-                      color: Colors.blueGrey[100],
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'PAUSE',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (course['activite'] == null || course['activite'].isEmpty) {
-                  return Container();
-                }
-
-                return Container(
-                  margin: const EdgeInsets.all(8.0),
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: Colors.blueGrey[100],
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${course['activite']}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18.0,
-                        ),
-                      ),
-                      const SizedBox(height: 8.0),
-                      Text(
-                        'Horaire: ${course['horaire']['start']} - ${course['horaire']['end']}',
-                        style: const TextStyle(fontSize: 16.0),
-                      ),
-                      const SizedBox(height: 8.0),
-                      Text(
-                        'Salle: ${course['salle'] ?? 'Non spécifié'}',
-                        style: const TextStyle(fontSize: 16.0),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        );
+      onPageChanged: (int page) {
+        setState(() {
+          currentPage = page;
+        });
       },
+      itemBuilder: (BuildContext context, int index) {
+        final currentDaySchedule = schedule[index];
+        final currentDate =
+            DateFormat('dd/MM/yyyy').parse(currentDaySchedule['date']);
+
+        return buildScheduleTable(currentDaySchedule);
+      },
+    );
+  }
+
+  Widget buildScheduleTable(Map<String, dynamic> daySchedule) {
+    return Column(
+      children: [
+        const SizedBox(height: 16.0),
+        Text(
+          "${getDayOfWeek(DateFormat('dd/MM/yyyy').parse(daySchedule['date']))} - ${daySchedule['date']}",
+          style: const TextStyle(
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16.0),
+        ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          // Permet de faire défiler même si le contenu est petit
+          shrinkWrap: true,
+          // Permet à la ListView de s'adapter à la taille de son contenu
+          itemCount: daySchedule['cours'].length,
+          itemBuilder: (BuildContext context, int index) {
+            var course = daySchedule['cours'][index];
+
+
+
+            if (course['activite'] == null || course['activite'].isEmpty) {
+              return Container();
+            }
+
+            return Container(
+              margin: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.blueGrey[100],
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${course['activite']}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18.0,
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Text(
+                    'Horaire: ${course['horaire']['start']} - ${course['horaire']['end']}',
+                    style: const TextStyle(fontSize: 16.0),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Text(
+                    'Salle: ${course['salle'] ?? 'Non spécifié'}',
+                    style: const TextStyle(fontSize: 16.0),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
 
-String _getDayOfWeek(DateTime date) {
+String getDayOfWeek(DateTime date) {
   switch (date.weekday) {
-    case DateTime.monday:
+    case 1:
       return 'Lundi';
-    case DateTime.tuesday:
+    case 2:
       return 'Mardi';
-    case DateTime.wednesday:
+    case 3:
       return 'Mercredi';
-    case DateTime.thursday:
+    case 4:
       return 'Jeudi';
-    case DateTime.friday:
+    case 5:
       return 'Vendredi';
-    case DateTime.saturday:
-      return 'Samedi';
-    case DateTime.sunday:
-      return 'Dimanche';
     default:
       return '';
   }

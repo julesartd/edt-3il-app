@@ -62,8 +62,6 @@ class _CalendarState extends State<Calendar> {
       },
       itemBuilder: (BuildContext context, int index) {
         final currentDaySchedule = schedule[index];
-        final currentDate =
-            DateFormat('dd/MM/yyyy').parse(currentDaySchedule['date']);
 
         return buildScheduleTable(currentDaySchedule);
       },
@@ -82,52 +80,60 @@ class _CalendarState extends State<Calendar> {
           ),
         ),
         const SizedBox(height: 16.0),
-        ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          // Permet de faire défiler même si le contenu est petit
-          shrinkWrap: true,
-          // Permet à la ListView de s'adapter à la taille de son contenu
-          itemCount: daySchedule['cours'].length,
-          itemBuilder: (BuildContext context, int index) {
-            var course = daySchedule['cours'][index];
+        Expanded(
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: daySchedule['cours'].length,
+            itemBuilder: (BuildContext context, int index) {
+              var course = daySchedule['cours'][index];
 
+              // Si 'activite' est null et ce n'est pas le créneau 3, retournez un Container vide
+              if (course['activite'] == null && index != 2) {
+                return Container();
+              }
 
+              // Si c'est le créneau 3 et 'activite' est null, affichez "Pause"
+              if (index == 2 && course['activite'] == null) {
+                return const Card(
+                  child: ListTile(
+                    title: Text('Pause'),
+                  ),
+                );
+              }
 
-            if (course['activite'] == null || course['activite'].isEmpty) {
-              return Container();
-            }
-
-            return Container(
-              margin: const EdgeInsets.all(8.0),
-              padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(
-                color: Colors.blueGrey[100],
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${course['activite']}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18.0,
+              return Container(
+                margin: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  color: Colors.blueGrey[100],
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${course['activite']}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.0,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    'Horaire: ${course['horaire']['start']} - ${course['horaire']['end']}',
-                    style: const TextStyle(fontSize: 16.0),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    'Salle: ${course['salle'] ?? 'Non spécifié'}',
-                    style: const TextStyle(fontSize: 16.0),
-                  ),
-                ],
-              ),
-            );
-          },
+                    const SizedBox(height: 8.0),
+                    Text(
+                      'Horaire: ${course['horaire']['start']} - ${course['horaire']['end']}',
+                      style: const TextStyle(fontSize: 16.0),
+                    ),
+                    const SizedBox(height: 8.0),
+                    Text(
+                      'Salle: ${course['salle'] ?? 'Non spécifié'}',
+                      style: const TextStyle(fontSize: 16.0),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ],
     );

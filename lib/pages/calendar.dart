@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:edt3il/api/service.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class Calendar extends StatefulWidget {
   final String className;
@@ -13,7 +14,7 @@ class Calendar extends StatefulWidget {
 
 class _CalendarState extends State<Calendar> {
   List<Map<String, dynamic>> schedule = [];
-  final PageController _pageController = PageController(initialPage: 0);
+  late PageController _pageController = PageController(initialPage: 0);
   int currentPage = 0;
 
   @override
@@ -29,6 +30,24 @@ class _CalendarState extends State<Calendar> {
       setState(() {
         schedule = scheduleData;
       });
+
+      // Trouver l'index de la date actuelle dans le calendrier
+      int todayIndex = schedule.indexWhere((daySchedule) {
+        DateTime scheduleDate =
+            DateFormat('dd/MM/yyyy').parse(daySchedule['date']);
+        DateTime now = DateTime.now();
+        return scheduleDate.day == now.day &&
+            scheduleDate.month == now.month &&
+            scheduleDate.year == now.year;
+      });
+
+      // Si la date actuelle est trouvée dans le calendrier, initialiser le PageController à cette page
+      if (todayIndex != -1) {
+        _pageController = PageController(initialPage: todayIndex);
+        currentPage = todayIndex;
+      } else {
+        _pageController = PageController(initialPage: 0);
+      }
     } catch (e) {
       print('Error: $e');
     }
@@ -93,41 +112,62 @@ class _CalendarState extends State<Calendar> {
                 return Container();
               }
 
-              // Si c'est le créneau 3 et 'activite' est null, affichez "Pause"
+              // Si c'est le créneau 3 et 'activite' est null, affichez "Pause"pp
               if (index == 2 && course['activite'] == null) {
-                return const Card(
-                  child: ListTile(
-                    title: Text('Pause'),
+                return Container(
+                  margin: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(12.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE84F13),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: const Text(
+                    'Pause',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18.0,
+                      color: Colors.white,
+                    ),
                   ),
                 );
               }
-
               return Container(
                 margin: const EdgeInsets.all(8.0),
                 padding: const EdgeInsets.all(12.0),
                 decoration: BoxDecoration(
-                  color: Colors.blueGrey[100],
+                  color: Colors.white70,
                   borderRadius: BorderRadius.circular(8.0),
+                  border: Border.all(color: const Color(0xFFE84F13)),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      '${course['activite']}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${course['activite']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18.0,
+                            ),
+                          ),
+                          const SizedBox(height: 8.0),
+                          Text(
+                            'Horaire: ${course['horaire']['start']} - ${course['horaire']['end']}',
+                            style: const TextStyle(fontSize: 16.0),
+                          ),
+                          const SizedBox(height: 8.0),
+                          Text(
+                            'Salle: ${course['salle'] ?? 'Non spécifié'}',
+                            style: const TextStyle(fontSize: 16.0),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8.0),
-                    Text(
-                      'Horaire: ${course['horaire']['start']} - ${course['horaire']['end']}',
-                      style: const TextStyle(fontSize: 16.0),
-                    ),
-                    const SizedBox(height: 8.0),
-                    Text(
-                      'Salle: ${course['salle'] ?? 'Non spécifié'}',
-                      style: const TextStyle(fontSize: 16.0),
+                    SvgPicture.asset(
+                      'assets/images/3il.svg',
+                      height: 20.0, // You can adjust the size as needed
                     ),
                   ],
                 ),

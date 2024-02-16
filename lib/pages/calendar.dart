@@ -65,12 +65,12 @@ class _CalendarState extends State<Calendar> {
       body: Center(
         child: schedule.isEmpty
             ? const CircularProgressIndicator()
-            : buildSchedulePageView(),
+            : buildEdtPage(),
       ),
     );
   }
 
-  Widget buildSchedulePageView() {
+  Widget buildEdtPage() {
     return PageView.builder(
       controller: _pageController,
       itemCount: schedule.length,
@@ -82,12 +82,12 @@ class _CalendarState extends State<Calendar> {
       itemBuilder: (BuildContext context, int index) {
         final currentDaySchedule = schedule[index];
 
-        return buildScheduleTable(currentDaySchedule);
+        return buildEdt(currentDaySchedule);
       },
     );
   }
 
-  Widget buildScheduleTable(Map<String, dynamic> daySchedule) {
+  Widget buildEdt(Map<String, dynamic> daySchedule) {
     return Column(
       children: [
         const SizedBox(height: 16.0),
